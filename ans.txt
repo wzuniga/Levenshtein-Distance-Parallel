@@ -1,0 +1,5 @@
+Egeo
+Frans Hals
+Dinstancia Levenshtein Egeo and Frans Hals: 10 8
+Serial:   0.0000031810
+Parallel: 0.0038327540

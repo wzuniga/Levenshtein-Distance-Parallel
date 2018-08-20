@@ -10,7 +10,8 @@
 
 using namespace std;
 
-#define thread_num 1
+#define thread_num 4
+#define parallel 3
 
 #define MIN3(a, b, c) ((a) < (b) ? ((a) < (c) ? (a) : (c)) : ((b) < (c) ? (b) : (c)))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
@@ -86,32 +87,51 @@ int findNerarWord(vector<Entry*>* dictionary, string find_word ){
     size_t serial, paral;
     
     int min_i, min_v = INT_MAX;
+    int min[thread_num][2];
+
+    for(int i=0; i < thread_num; i++){
+        min[i][0] = INT_MAX;
+    }
 
     start_total = omp_get_wtime();
+#ifndef parallel
     #pragma omp parallel sections
     {
         #pragma omp section
         {
+#endif
             start_local_l = omp_get_wtime();
+#           pragma omp parallel for default(none) private(paral, i) shared(min, dictionary, find_word) num_threads(thread_num) schedule(static)
             for(i = 0; i<dictionary->size(); i++){
-                paral = levenshtein_distance(find_word, (*dictionary)[i]->get_title());   
-                if (min_v > paral){
-                    min_v = paral;
-                    min_i = i;
+                paral = levenshtein_distance(find_word, (*dictionary)[i]->get_title()); 
+                if (min[omp_get_thread_num()][0] > paral){
+                    min[omp_get_thread_num()][0] = paral;
+                    min[omp_get_thread_num()][1] = i;
                 }
             }
             end_local_l = omp_get_wtime();
+
+            for(int i=0; i < thread_num; i++){
+                if(min_v > min[i][0]){
+                    min_v = min[i][0];
+                    min_i = min[i][1];
+                }       
+            }
+#ifndef parallel
         }
         #pragma omp section
         {
+#endif
             start_local_k = omp_get_wtime();
             for(e = 0; e<dictionary->size(); e++){
                 pos = kmp(find_word, (*dictionary)[e]->get_title());
                 pos_ans = pos != -1 ? e : pos_ans;
             }
             end_local_k = omp_get_wtime();
+#ifndef parallel
         }
     }
+#endif
     end_total = omp_get_wtime();
 
     printf("Tiempo:     %.10f  threads: %i\n", end_total - start_total, thread_num);
@@ -165,16 +185,11 @@ int main(int argc, char* argv[])
     printf("Loaded: %zu words\n", dictionary.size());
     vector<string> inp {"Egeo","Universidad", "Full Metal Jacket"};
     int max = inp.size(), i = 0;
-    //while(true){
     while(i < max){
         string word = inp[i];
-        //string word;
-        //getline(cin, word);
         int min_i = findNerarWord(&dictionary, word);
         i++;
     }
     
    return 0;
 }
-
-//paralelizar la busqueda de a palabra con la busqueda entre todos

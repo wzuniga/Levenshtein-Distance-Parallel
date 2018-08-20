@@ -10,7 +10,7 @@
 
 using namespace std;
 
-#define thread_num 4
+#define thread_num 2
 
 #define MIN3(a, b, c) ((a) < (b) ? ((a) < (c) ? (a) : (c)) : ((b) < (c) ? (b) : (c)))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
@@ -94,34 +94,19 @@ int findNerarWord(vector<Entry*>* dictionary, string find_word ){
     start_total = omp_get_wtime();
 #   pragma omp parallel for default(none) private(pos,i,serial,paral,start_local,end_local) shared(pos_ans,cout, min, dictionary, find_word) num_threads(thread_num) schedule(static)
     for(i = 0; i<dictionary->size(); i++){
-//        #pragma omp parallel sections
-//        {
-//            #pragma omp section
-//            {
-//                for(i = 0; i<dictionary->size(); i++){
-                paral = levenshtein_distance_parallel(find_word, find_word.length(), (*dictionary)[i]->get_title(), (*dictionary)[i]->get_title().length());   
-                if (min[omp_get_thread_num()][0] > paral){
-                    min[omp_get_thread_num()][0] = paral;
-                    min[omp_get_thread_num()][1] = i;
-                }
-//                }
-//            }
-//            #pragma omp section
-//            {
-//                for(i = 0; i<dictionary->size(); i++){
-                pos = kmp(find_word, (*dictionary)[i]->get_title());
-                pos_ans = pos != -1 ? i : pos_ans;
-//                }
-//            }
-//        }
+        paral = levenshtein_distance_parallel(find_word, find_word.length(), (*dictionary)[i]->get_title(), (*dictionary)[i]->get_title().length());   
+        if (min[omp_get_thread_num()][0] > paral){
+            min[omp_get_thread_num()][0] = paral;
+            min[omp_get_thread_num()][1] = i;
+        }
+        pos = kmp(find_word, (*dictionary)[i]->get_title());
+        pos_ans = pos != -1 ? i : pos_ans;
     }
     end_total = omp_get_wtime();
 
 
     int min_i, min_v = INT_MAX;
-    //cout << "----" << endl;
     for(int i=0; i < thread_num; i++){
-        //cout << min[i][1] << " " << min[i][0] << endl;
         if(min_v > min[i][0]){
             min_v = min[i][0];
             min_i = min[i][1];
@@ -138,7 +123,6 @@ int findNerarWord(vector<Entry*>* dictionary, string find_word ){
 
 int main(int argc, char* argv[])
 {
-    // = "Provincia de Bus";
     vector<Entry*> dictionary;
 
     vector<string> dataset {
@@ -177,17 +161,21 @@ int main(int argc, char* argv[])
     for(int i = 0; i < dataset.size(); i++)
         loadData(&dictionary, dataset[i]);
 
-    printf("Loaded: %i words\n", dictionary.size());
+    printf("Loaded: %zu words\n", dictionary.size());
+    printf("Write: ");
+
+    //vector<string> inp {"Egeo","Universidad", "Full Metal Jacket"};
+    //int max = inp.size(), i = 0;
+    //while(i < max){
+    //    string word = inp[i];
+    //    int min_i = findNerarWord(&dictionary, word);
+    //    i++;
+    //}
 
     while(true){
         string word;
-        //cin >> word;
         getline(cin, word);
         int min_i = findNerarWord(&dictionary, word);
-        //printf("Busqueda: %s %i\n", dictionary[min_i]->get_title().c_str(), min_i);
     }
-    
    return 0;
 }
-
-//paralelizar la busqueda de a palabra con la busqueda entre todos

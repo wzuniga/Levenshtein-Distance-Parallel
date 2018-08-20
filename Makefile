@@ -8,8 +8,12 @@ input:
 lev:
 	g++ MODEL/lvstn.cpp -fopenmp -o MODEL/lvstn -std=c++11
 	./MODEL/lvstn < in.txt
+levF:
+	g++ MODEL/lvstnFor.cpp -fopenmp -o MODEL/lvstnFor -std=c++11
+	./MODEL/lvstnFor 
 levS:
 	g++ MODEL/lvstn.cpp -o MODEL/lvstn -std=c++11
 	./MODEL/lvstn
-levE:
-	./MODEL/lvstn
+levD:
+	g++ MODEL/lvstnFor.cpp -fopenmp -o MODEL/lvstnFor -std=c++11
+	./MODEL/lvstnFor
